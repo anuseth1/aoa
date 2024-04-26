@@ -1,0 +1,561 @@
+1 LINUX SHELL SCRIPT 
+
+#!bin/sh
+echo "__________"
+echo "OS Info"
+cat /etc/os-release
+uname -r
+uname -a
+uname -v
+echo "__________"
+echo "10 processes in descending order"
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=%mem|head -10
+echo "__________"
+echo "Highest memory usage"
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=%mem|head -2
+echo "__________"
+echo "user login and name"
+whoami
+logname
+echo "$SHELL"
+pwd
+uname -srm
+echo "__________"
+
+2 LINUX COMMAND COPY ONE FILE TO ANOTHER
+
+FILE1(file1.c)
+#include <stdio.h>
+#include <stdlib.h>
+int main()
+{
+FILE *fptr1, *fptr2;
+char filename[100],c;
+printf("Enter the filename to open for reading \n");
+scanf("%s", filename);
+fptr1=fopen(filename, "r");
+if(fptr1==NULL)
+{
+printf("Cannot open file %s\n", filename);
+exit(0);
+}
+printf("Enter the filename to open for writing \n");
+scanf("%s", filename);
+fptr2=fopen(filename, "w");
+if(fptr2==NULL)
+{
+printf("Cannot open file %s\n", filename);
+exit(0);
+}
+c=fgetc(fptr1);
+while(c!=EOF)
+{
+fputc(c, fptr2);
+c=fgetc(fptr1);
+}
+printf("contents copied to %s\n", filename);
+fclose(fptr1);
+fclose(fptr2);
+return 0;
+}
+FILE2(file2.txt)
+abcdefghijklmnopq
+
+3 OBTAIN PROCESS ID CHILD AND PARENT
+
+#include<stdio.h>
+#include<stdlib.h>
+int fork();
+int getpid();
+int getppid();
+int main(){
+int pid = fork();
+if(pid == 0){
+printf("this is the child process.my pid is %d and my parents id is %d\n", getpid(),getppid());
+}
+else{
+printf("this is the parent process.my pid is %d and my id is %d.\n", getpid(),pid);
+}
+return 0;
+}
+
+4 NON-PREMPTIVE SCHEDULING (FCFS)
+
+#include <stdlib.h>
+#include <stdio.h>
+void main()
+{
+ int pn = 0; //Processes Number
+ int CPU = 0; //CPU Current time
+ int allTime = 0; // Time neded to finish all processes
+ printf("Enter Processes Count: ");
+ scanf("%d",&pn);
+ int AT[pn];
+ int ATt[pn];
+ int NoP = pn;
+ int PT[pn]; //Processes Time
+ int PP[pn]; //Processes priorty
+ int PPt[pn];
+ int waitingTime[pn];
+ int turnaroundTime[pn];
+ int i=0;
+ //Scanning Time and Priorty
+ for(i=0 ;i<pn ;i++){
+ printf("\nProcessing time for P%d: ",i+1);
+ scanf("%d",&PT[i]);
+ printf("Priorty for P%d: ",i+1);
+ scanf("%d",&PP[i]);
+ PPt[i] = PP[i];
+ printf("Arrival Time for P%d: ",i+1);
+ scanf("%d",&AT[i]);
+ ATt[i] = AT[i];
+ }
+ int LAT = 0; //LastArrivalTime
+ for(i = 0; i < pn; i++)
+ if(AT[i] > LAT)
+ LAT = AT[i];
+ int MAX_P = 0; //Max Priorty
+ for(i = 0; i < pn; i++)
+ if(PPt[i] > MAX_P)
+ MAX_P = PPt[i];
+ int ATi = 0; //Pointing to Arrival Time indix
+ int P1 = PPt[0]; //Pointing to 1st priorty Value
+ int P2 = PPt[0]; //Pointing to 2nd priorty Value
+ //findding the First Arrival Time and Highest piriorty Process
+ int j = -1;
+ while(NoP > 0 && CPU <= 1000){
+ for(i = 0; i < pn; i++){
+ if((ATt[i] <= CPU) && (ATt[i] != (LAT+10))){
+ if(PPt[i] != (MAX_P+1)){
+ P2 = PPt[i];
+ j= 1;
+ if(P2 < P1){
+ j= 1;
+ ATi = i;
+ P1 = PPt[i];
+ P2 = PPt[i];
+ }
+ }
+ }
+ }
+ if(j == -1){
+ CPU = CPU+1;
+ continue;
+ }else{
+ waitingTime[ATi] = CPU - ATt[ATi];
+ CPU = CPU + PT[ATi];
+ turnaroundTime[ATi] = CPU - ATt[ATi];
+ ATt[ATi] = LAT +10;
+ j = -1;
+ PPt[ATi] = MAX_P + 1;
+ ATi = 0; //Pointing to Arrival Time indix
+ P1 = MAX_P+1; //Pointing to 1st piriorty Value
+ P2 = MAX_P+1; //Pointing to 2nd piriorty Value
+ NoP = NoP - 1;
+ }
+ }
+ printf("\nPN\tPT\tPP\tAT\tWT\tTT\n\n");
+ for(i = 0; i < pn; i++){
+ printf("P%d\t%d\t%d\t%d\t%d\t%d\n",i+1,PT[i],PP[i],AT[i],waitingTime[i],turnaroundTime[i]);
+ }
+ int AvgWT = 0;
+ int AVGTaT = 0;
+ for(i = 0; i < pn; i++){
+ AvgWT = waitingTime[i] + AvgWT;
+ AVGTaT = turnaroundTime[i] + AVGTaT;
+ }
+ printf("AvgWaitingTime = %d\nAvgTurnaroundTime = %d\n",AvgWT/pn,AVGTaT/pn);
+}
+
+5 PRE-EMPTIVE SCHEDULING
+
+#include <stdio.h>
+//preemptive priority scheduling
+void swap(int *a,int *b)
+{
+ int temp=*a;
+ *a=*b;
+ *b=temp;
+}
+int main()
+{
+ int n;
+ printf("Enter Number of Processes: ");
+ scanf("%d",&n);
+ int burst[n],priority[n],index[n];
+ for(int i=0;i<n;i++)
+ {
+ printf("Enter Burst Time and Priority Value for Process %d: ",i+1);
+ scanf("%d %d",&burst[i],&priority[i]);
+ index[i]=i+1;
+ }
+ for(int i=0;i<n;i++)
+ {
+ int temp=priority[i],m=i;
+ for(int j=i;j<n;j++)
+ {
+ if(priority[j] > temp)
+ {
+ temp=priority[j];
+ m=j;
+ }
+ }
+ swap(&priority[i], &priority[m]);
+ swap(&burst[i], &burst[m]);
+ swap(&index[i],&index[m]);
+ }
+ int t=0;
+ printf("Order of process Execution is\n");
+ for(int i=0;i<n;i++)
+ {
+ printf("P%d is executed from %d to %d\n",index[i],t,t+burst[i]);
+ t+=burst[i];
+ }
+ printf("\n");
+ printf("Process Id\tBurst Time\tWait Time\n");
+ int wait_time=0;
+ int total_wait_time = 0;
+ for(int i=0;i<n;i++)
+ {
+ printf("P%d\t\t%d\t\t%d\n",index[i],burst[i],wait_time);
+ total_wait_time += wait_time;
+ wait_time += burst[i];
+ }
+ float avg_wait_time = (float) total_wait_time / n;
+ printf("Average waiting time is %f\n", avg_wait_time);
+ int total_Turn_Around = 0;
+ for(int i=0; i < n; i++){
+ total_Turn_Around += burst[i];
+ }
+ float avg_Turn_Around = (float) total_Turn_Around / n;
+ printf("Average TurnAround Time is %f",avg_Turn_Around);
+ return 0;
+}
+
+6 PRODUCER CONSUMER PROBLEM
+
+#include <stdio.h>
+#include <stdlib.h>
+// Initializing the mutex variable with the value 1.
+int mutex = 1;
+// Initializing the full variable with the value 0.
+int full = 0;
+// empty variable will store the number of empty slots in the buffer.
+int empty = 10, data = 0;
+// A function that will resemble producers' production of data
+void producer()
+{
+ // decrementing the value of mutex
+ --mutex;
+ // Increase the number of full slots
+ ++full;
+ // decrementing the number of slots available
+ --empty;
+ // incrementing data which means that the data is produced.
+ data++;
+ printf("\nProducer produces item number: %d\n", data);
+ // incrementing the value of mutex
+ ++mutex;
+}
+// A function that will resemble the consumer's consumption of data
+void consumer()
+{
+ // decrementing the value of mutex
+ --mutex;
+ // Decrease the number of full slots
+ --full;
+ // incrementing the number of slots available
+ ++empty;
+ printf("\nConsumer consumes item number: %d.\n", data);
+ // since data is consumed, let us decrease the value of data
+ data--;
+ // incrementing the value of mutex
+ ++mutex;
+}
+int main()
+{
+ int n, i;
+ printf("\n1. Enter 1 for Producer"
+ "\n2. Enter 2 for Consumer"
+ "\n3. Enter 3 to Exit");
+ for (i = 1; i > 0; i++)
+ {
+ printf("\nEnter your choice: ");
+ scanf("%d", &n);
+ // using switch case as there can be multiple types of choice.
+ switch (n)
+ {
+ case 1:
+ /*
+ If the value of mutex is 1 and the buffer is not full, then we can produce the data
+ */
+ if ((mutex == 1) && (empty != 0))
+ {
+ producer();
+ }
+ // else, the buffer must be full.
+ else
+ {
+ printf("The Buffer is full. New data cannot be produced!");
+ }
+ break;
+ case 2:
+ /*
+ If the value of mutex is 1 and the buffer is not empty, then we can consume the data
+ */
+ if ((mutex == 1) && (full != 0))
+ {
+ consumer();
+ }
+ // else, the buffer must be empty.
+ else
+ {
+ printf("The Buffer is empty! New data cannot be consumed!");
+ }
+ break;
+ // Exit Condition
+ case 3:
+ exit(0);
+ break;
+ }
+ }
+
+
+7 DEADLOCK AVOIDANCE BANKERS 
+
+#include<stdio.h>
+int main() {
+ int p, c, count = 0, i, j, alc[5][3], max[5][3], need[5][3], safe[5], available[3], done[5], terminate = 
+0;
+ printf("Enter the number of process and resources");
+ scanf("%d %d", & p, & c);
+ printf("enter allocation of resource of all process %dx%d matrix", p, c);
+ for (i = 0; i < p; i++) {
+ for (j = 0; j < c; j++) {
+ scanf("%d", & alc[i][j]);
+ }
+ }
+ printf("enter the max resource process required %dx%d matrix", p, c);
+ for (i = 0; i < p; i++) {
+ for (j = 0; j < c; j++) {
+ scanf("%d", & max[i][j]);
+ }
+ }
+ printf("enter the available resource");
+ for (i = 0; i < c; i++)
+ scanf("%d", & available[i]);
+ printf("\n need resources matrix are\n");
+ for (i = 0; i < p; i++) {
+ for (j = 0; j < c; j++) {
+ need[i][j] = max[i][j] - alc[i][j];
+ printf("%d\t", need[i][j]);
+ }
+ printf("\n");
+ }
+ for (i = 0; i < p; i++) {
+ done[i] = 0;
+ }
+ while (count < p) {
+ for (i = 0; i < p; i++) {
+ if (done[i] == 0) {
+ for (j = 0; j < c; j++) {
+ if (need[i][j] > available[j])
+ break;
+ }
+ if (j == c) {
+ safe[count] = i;
+ done[i] = 1;
+ for (j = 0; j < c; j++) {
+ available[j] += alc[i][j];
+ }
+ count++;
+ terminate = 0;
+ } else {
+ terminate++;
+ }
+ }
+ }
+ if (terminate == (p - 1)) {
+ printf("safe sequence does not exist");
+ break;
+ }
+ }
+ if (terminate != (p - 1)) {
+ printf("\n available resource after completion\n");
+ for (i = 0; i < c; i++) {
+ printf("%d\t", available[i]);
+ }
+ printf("\n safe sequence are\n");
+ for (i = 0; i < p; i++) {
+ printf("p%d\t", safe[i]);
+ }
+ }
+ return 0;
+}
+
+
+8 FIRST FIT
+
+#include<stdio.h> 
+void firstFit(int blockSize[], int m, int processSize[], int n) 
+{ 
+ int i, j; 
+ int allocation[n]; 
+ for(i = 0; i < n; i++) 
+ { 
+ allocation[i] = -1; 
+ } 
+ for (i = 0; i < n; i++) 
+ { 
+ for (j = 0; j < m; j++) 
+ { 
+ if (blockSize[j] >= processSize[i]) 
+ {
+ allocation[i] = j; 
+ blockSize[j] -= processSize[i]; 
+ break; 
+ } 
+ } 
+ } 
+ printf("\nProcess No.\tProcess Size\tBlock no.\n"); 
+ for (int i = 0; i < n; i++) 
+ { 
+ printf(" %i\t\t\t", i+1); 
+ printf("%i\t\t\t\t", processSize[i]); 
+ if (allocation[i] != -1) 
+ printf("%i", allocation[i] + 1); 
+ else
+ printf("Not Allocated"); 
+ printf("\n"); 
+ } 
+} 
+int main() 
+{ 
+ int m; 
+ int n; 
+ int blockSize[] = {100, 500, 200, 300, 600}; 
+ int processSize[] = {212, 417, 112, 426}; 
+ m = sizeof(blockSize) / sizeof(blockSize[0]); 
+ n = sizeof(processSize) / sizeof(processSize[0]); 
+ firstFit(blockSize, m, processSize, n); 
+ return 0 ; 
+} 
+
+
+9 REPLACEMENT POLICIES FIFO,LIFO,OPTIMAL
+
+int fifoPageReplacement(int pages[], int n, int capacity) {
+ int frames[capacity], page_faults = 0, first_in = 0;
+ for (int i = 0; i < capacity; i++)
+ frames[i] = -1;
+ for (int i = 0; i < n; i++) {
+ if (!isPagePresent(pages[i], frames, capacity)) {
+ frames[first_in] = pages[i];
+ first_in = (first_in + 1) % capacity;
+ page_faults++;
+ }
+ }
+ return page_faults;
+}
+// LRU Page Replacement Algorithm
+int lruPageReplacement(int pages[], int n, int capacity) {
+ int frames[capacity], page_faults = 0;
+ for (int i = 0; i < capacity; i++)
+ frames[i] = -1;
+ int counter = 0, least_index[capacity];
+ for (int i = 0; i < n; i++) {
+ if (!isPagePresent(pages[i], frames, capacity)) {
+ int j = 0;
+ if (counter < capacity) {
+ frames[counter] = pages[i];
+ least_index[counter] = counter;
+ counter++;
+ } else {
+ int least_used = least_index[0];
+ for (j = 1; j < capacity; j++) {
+ if (least_index[j] < least_used)
+ least_used = least_index[j];
+ }
+ frames[least_used] = pages[i];
+ least_index[least_used] = counter;
+ counter++;
+ }
+ page_faults++;
+ }
+ }
+ return page_faults;
+}
+int main() {
+ int reference_string[] = {4, 7, 6, 1, 7, 6, 1, 2, 7, 2};
+ int n = sizeof(reference_string) / sizeof(reference_string[0]);
+ int capacity = 3;
+ printf("Optimal Page Replacement Algorithm: %d page faults\n", 
+optimalPageReplacement(reference_string, n, capacity));
+ printf("FIFO Page Replacement Algorithm: %d page faults\n", 
+fifoPageReplacement(reference_string, n, capacity));
+ printf("LRU Page Replacement Algorithm: %d page faults\n", 
+lruPageReplacement(reference_string, n, capacity));
+ return 0;
+}
+
+
+10 DISK SCHEDULING (sstf)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+// Function to calculate the absolute difference between two numbers
+int abs_diff(int a, int b) {
+ return abs(a - b);
+}
+// Function to find the index of the shortest seek time request
+int find_shortest_seek_time(int *requests, int num_requests, int head_position) {
+ int shortest_seek_time = INT_MAX;
+ int shortest_index = -1;
+ for (int i = 0; i < num_requests; i++) {
+ if (!requests[i]) {
+ continue; // Skip processed requests
+ }
+ int seek_time = abs_diff(requests[i], head_position);
+ if (seek_time < shortest_seek_time) {
+ shortest_seek_time = seek_time;
+ shortest_index = i;
+ }
+ }
+ return shortest_index;
+}
+// Function to calculate the total seek time
+int calculate_seek_time(int *requests, int num_requests, int start_position) {
+ int total_seek_time = 0;
+ int head_position = start_position;
+ for (int i = 0; i < num_requests; i++) {
+ int shortest_index = find_shortest_seek_time(requests, num_requests, head_position);
+ if (shortest_index == -1) {
+ break; // All requests processed
+ }
+ total_seek_time += abs_diff(requests[shortest_index], head_position);
+ head_position = requests[shortest_index];
+ requests[shortest_index] = 0; // Mark request as processed
+ }
+ return total_seek_time;
+}
+int main() {
+ int num_requests, start_position;
+ printf("Enter the number of disk requests: ");
+ scanf("%d", &num_requests);
+ printf("Enter the starting head position: ");
+ scanf("%d", &start_position);
+ int *requests = (int *)malloc(num_requests * sizeof(int));
+ if (requests == NULL) {
+ printf("Memory allocation failed\n");
+ return 1;
+ }
+ printf("Enter the disk request positions:\n");
+ for (int i = 0; i < num_requests; i++) {
+ scanf("%d", &requests[i]);
+ }
+ int total_seek_time = calculate_seek_time(requests, num_requests, start_position);
+ printf("Total seek time using SSTF: %d\n", total_seek_time);
+ free(requests);
+ return 0;
+}
